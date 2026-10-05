@@ -53,7 +53,7 @@ My settings: population 32, starting from the first 32 templates of the released
 
 Where I differ from the papers: success is decided by the API judge and not by AutoDAN's keyword list. The released AutoDAN pool starts from a "hypothetical response" template, while the paper talks about a DAN template, and I use the released pool. Elite rate 0.1 and the 5-then-1 schedule follow the paper and not the code defaults. Budget and seeds are the same in every round so the ASR numbers can be compared.
 
-I also wrote code for [PAIR](https://arxiv.org/abs/2310.08419) and [PAP](https://arxiv.org/abs/2401.06373), but kept them switched off because OpenAI chat models refuse to play the red-teamer. Same for ROT13, base64 and disemvowel attacks from [Wei et al.](https://arxiv.org/abs/2307.02483): a 1.5B model cannot decode them, so the numbers would be near zero anyway.
+I also wrote code for [PAIR](https://arxiv.org/abs/2310.08419) and [PAP](https://arxiv.org/abs/2401.06373), but kept them switched off because OpenAI chat models cost was becoming my bottleneck
 
 ### 2.2 The judge
 
