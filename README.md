@@ -80,7 +80,7 @@ If the defender is trained only on GCG and AutoDAN successes, it will mostly lea
 |---|---|
 | Training, harmful side (reward for refusing) | Pool of judged successful attacks (166 going into round 1: 16 AutoDAN, 5 GCG, 145 from a template sweep). 300 wrapped harmful prompts per round (my own wrappers and AutoDAN templates 100 to 299). Plain harmful requests from [AdvBench](https://arxiv.org/abs/2307.15043) train part (429), [HarmBench](https://arxiv.org/abs/2402.04249) val (19) and [OR-Bench](https://arxiv.org/abs/2405.20947) toxic (634). |
 | Training, benign side (reward for helping) | Alpaca-cleaned (1,980), [GSM8K](https://arxiv.org/abs/2110.14168) train (400 short problems), OR-Bench-hard (1,239, only about 15% of the benign side), 30 scary-sounding but harmless prompts I wrote myself. |
-| Attack behaviours | AdvBench, 8 TRACK and 8 FRESH per round. Prompts too similar to the test sets are removed (TF-IDF filter). |
+| Attack behaviours (for GCG and AutoDAN) | AdvBench. GCG needs two columns: `goal` (the harmful request) and `target` (the text "Sure, here is ..." that the suffix is optimised for). GCG runs only on the 8 TRACK behaviours (it is the slowest attack), the same ones in every round. AutoDAN runs on the 8 TRACK and 8 new FRESH behaviours per round. Prompts too similar to the test sets are removed (TF-IDF filter). |
 | Dev probe (only for picking checkpoints, never trained on) | 20 HarmBench-val and 20 OR-Bench-toxic, 20 OR-Bench-hard and 20 Alpaca, 40 attack-style prompts (20 behaviours with AutoDAN templates 300 and 301). |
 | Test only (never trained on) | HarmBench test (159 prompts) as direct requests, and also wrapped in four attack types the defender never saw: [Wei et al.](https://arxiv.org/abs/2307.02483) refusal-suppression, style-injection, prefix-injection, and [DeepInception](https://arxiv.org/abs/2311.03191). Also [StrongREJECT](https://arxiv.org/abs/2402.10260) (53), [XSTest](https://arxiv.org/abs/2308.01263) safe (250) and unsafe (200), OR-Bench-hard (60), [Alpaca-cleaned](https://huggingface.co/datasets/yahma/alpaca-cleaned) (30, plus 30 for drift), [MMLU](https://arxiv.org/abs/2009.03300) (150), GSM8K test (40). |
 
@@ -104,6 +104,7 @@ I checked these numbers in three places: the sizes printed by the notebook, `run
 | GSM8K | train 7,473*, test 1,319* | 400 short train problems, 40 test problems |
 | MMLU | test 14,042* | 150 |
 | AutoDAN template pool | 500 | only templates 0 to 301 are touched. 302 to 499 are not used. |
+| GCG (no dataset of its own) | - | It uses only AdvBench: `goal` as the request and `target` as the text to be produced. Only the 8 TRACK behaviours, so 8 attacks in each of the 4 attack rounds, 32 attacks in total, each up to 60 steps with 128 candidates per step. The suffix always starts as 20 `!` tokens. GCG successes: 5, 2 and 3 in rounds 1, 2 and 3, and they go into the success pool. The 2 successes of round 4 are only measured, because nothing is trained after the final attack. |
 
 So the test numbers are on these subsets (for example OR-Bench-hard is only 60 out of about 1,319 prompts, GSM8K is 40 out of 1,319). One full evaluation of a defender judges 848 attack prompts (159 + 53 + 636) with the API, and I could not afford more.
 
@@ -119,7 +120,7 @@ So the test numbers are on these subsets (for example OR-Bench-hard is only 60 o
 
 For example in main round 1, from the 634 OR-Bench-toxic prompts only 71 different ones were drawn, from 1,980 Alpaca prompts only 70, and from the 1,239 OR-Bench-hard prompts in the training pool only 19. `results/core/rl_visits_round1.json` and `results/bonus/rl_visits_round*.json` have this for every pool.
 
-The pools were also a bit different in the two runs. In the main part the success pool had 166 prompts in round 1 (16 AutoDAN, 5 GCG, 145 from the template sweep) and 169 in round 2. In the bonus the template sweep was switched off, so the success pool is only what the RL attacker found: 51 prompts in round 1, 117 in round 2 (51 + 66) and 201 in round 3 (117 + 84). The bonus has 453 plain AdvBench requests instead of 429, because it attacks only one set of FRESH behaviours.
+The pools were also a bit different in the two runs. In the main part the success pool had 166 prompts in round 1 (16 AutoDAN, 5 GCG, 145 from the template sweep), 169 in round 2 (2 GCG and 1 from the sweep) and 172 in round 3 (3 GCG). In the bonus the template sweep was switched off, so the success pool is only what the RL attacker found: 51 prompts in round 1, 117 in round 2 (51 + 66) and 201 in round 3 (117 + 84). The bonus has 453 plain AdvBench requests instead of 429, because it attacks only one set of FRESH behaviours.
 
 ### 2.5 The safety check (dev probe)
 
