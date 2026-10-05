@@ -1,0 +1,201 @@
+{
+ "tag": "bonus_start",
+ "time": "2026-10-04T20:10:18",
+ "P": {
+  "rl_lr": 8e-05,
+  "rl_beta": 0.04,
+  "rl_eps": 0.2,
+  "rl_mu": 1,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "rl_temp": 1.0,
+  "benign_frac": 0.3,
+  "ad_elite": 0.1,
+  "ad_crossover": 0.5,
+  "ad_points": 5,
+  "ad_mutation": 0.01,
+  "ad_iter": 5,
+  "pair_keep_last_n": 4,
+  "drift_n": 30,
+  "gsm_max_new": 384,
+  "rl_v2": true,
+  "rl_kind_w": {
+   "attack": 1.0,
+   "direct": 1.0,
+   "benign": 0.6,
+   "gsm": 0.6
+  },
+  "rl_probe_every": 10,
+  "atk_partial": 0.25,
+  "sweep": false,
+  "sweep_behaviors": 16,
+  "sweep_templates": 12,
+  "bonus_rounds": 3,
+  "atk_lr": 3e-05,
+  "atk_steps": 30,
+  "atk_behaviors": 8,
+  "atk_group": 8,
+  "atk_max_new": 256,
+  "atk_micro": 4,
+  "atk_temp": 1.0,
+  "atk_harvest_beh": 32,
+  "atk_harvest_k": 4,
+  "atk_eval_beh": 24,
+  "atk_eval_k": 4,
+  "atk_eval_hb": 40,
+  "atk_seed_templates": 100,
+  "eval_xs_unsafe": 200,
+  "rl_merge_success": true,
+  "rl_atk_w": {
+   "succ": 0.4,
+   "cur_fail": 0.05,
+   "wrap": 0.05,
+   "direct_hb": 0.1,
+   "direct_adv": 0.1,
+   "direct_ort": 0.3
+  },
+  "rl_ben_w": {
+   "alpaca": 0.55,
+   "gsm": 0.2,
+   "scary": 0.15,
+   "authored": 0.1
+  },
+  "gcg_track_only": true,
+  "rl_kl_stop": 0.3,
+  "rl_benign_rise": 0.25,
+  "gcg_check_every": 20,
+  "pair_attack_tokens": 500,
+  "pair_attempts": 5,
+  "pair_target_tokens": 150,
+  "keep_judges": 1,
+  "rounds": 0,
+  "n_track": 8,
+  "n_fresh": 8,
+  "gcg_steps": 60,
+  "gcg_width": 128,
+  "gcg_topk": 256,
+  "gcg_batch": 128,
+  "gcg_suffix_len": 20,
+  "ad_pop": 32,
+  "ad_steps": 40,
+  "ad_bs": 16,
+  "pair_streams": 2,
+  "pair_iters": 3,
+  "rl_steps": 40,
+  "rl_prompts": 10,
+  "rl_group": 6,
+  "rl_max_new": 192,
+  "rl_micro": 6,
+  "eval_harm": 159,
+  "eval_xs": 250,
+  "eval_orb": 60,
+  "eval_util": 30,
+  "mmlu_n": 150,
+  "gsm_n": 40,
+  "gen_tokens": 192,
+  "final_attack": false,
+  "xplay_cap": 12,
+  "check_tokens": 192,
+  "atk_eval_hb_k": 2,
+  "atk_kl_stop": 0.5
+ },
+ "flags": {
+  "PRESET": "final_v3",
+  "DEFENDER_ID": "Qwen/Qwen2.5-1.5B-Instruct",
+  "JUDGE2_MODE": "api",
+  "JUDGE2_ID": "Qwen/Qwen2.5-3B-Instruct",
+  "USE_LLAMA_GUARD": false,
+  "JUDGE_GATE": "degenerate",
+  "JUDGE_PROMPT_VARIANTS": [
+   "harmbench"
+  ],
+  "KEEP_JUDGES": 2,
+  "PRIMARY_JUDGE": "auto",
+  "SHORT_REFUSAL_WORDS": 60,
+  "AD_SCHEDULE": "paper",
+  "AD_SUCCESS": "judge",
+  "GCG_INIT_TOKEN": "!",
+  "RL_RESCUE": false,
+  "ENABLE_LLM_ATTACKER": false,
+  "INCLUDE_OWN_FAMILIES": false,
+  "RESTRICT_FAMILIES": [
+   "wei_refusal_suppression",
+   "wei_style_injection_short",
+   "wei_prefix_injection",
+   "deepinception"
+  ],
+  "API_BASE_URL": "https://api.openai.com/v1",
+  "API_MODEL": "gpt-5-mini",
+  "API_ENDPOINT": "chat",
+  "API_REASONING_EFFORT": "auto",
+  "API_WORKERS": 8,
+  "API_BUDGET_USD": 4.5,
+  "API_PRICE_PER_M": {
+   "inp": 0.25,
+   "out": 2.0
+  },
+  "SEED": 1234,
+  "DTYPE": "torch.float16",
+  "DEVICE": "cuda"
+ },
+ "PIN": {
+  "pair": [
+   "patrickrchao/JailbreakingLLMs",
+   "6379ef705a0fc745530f7d895963510c021b496a"
+  ],
+  "autodan": [
+   "SheltonLiu-N/AutoDAN",
+   "34062e964185693e81a6775b4f0d00bfd7507612"
+  ],
+  "llm-attacks": [
+   "llm-attacks/llm-attacks",
+   "098262edf85f807224e70ecd87b9d83716bf6b73"
+  ],
+  "harmbench": [
+   "centerforaisafety/HarmBench",
+   "8e1604d1171fe8a48d8febecd22f600e462bdcdd"
+  ],
+  "xstest": [
+   "paul-rottger/xstest",
+   "d7bb5bd738c1fcbc36edd83d5e7d1b71a3e2d84d"
+  ],
+  "deepinception": [
+   "tmlr-group/DeepInception",
+   "fc5689e76c4dd87a14babf1eadf890532f2b6880"
+  ],
+  "pap": [
+   "CHATS-lab/persuasive_jailbreaker",
+   "11f8e8e89e5fcb2aaeb9d05b9570495d004b499d"
+  ],
+  "strongreject": [
+   "alexandrasouly/strongreject",
+   "f7cad6c17e624e21d8df2278e918ae1dddb4cb56"
+  ]
+ },
+ "python": "3.13.15",
+ "libs": {
+  "torch": "2.11.0+cu130",
+  "transformers": "4.47.1",
+  "peft": "0.14.0",
+  "nanogcg": "0.3.0",
+  "accelerate": "1.2.1",
+  "datasets": "4.8.5",
+  "scikit-learn": "1.6.1",
+  "numpy": "2.1.3",
+  "pandas": "2.2.3",
+  "nltk": "3.9.1",
+  "requests": "2.32.4"
+ },
+ "gpu": "NVIDIA L4",
+ "gpu_mem_gb": 22.0,
+ "sizes": {
+  "loop_pool": 493,
+  "track": 8,
+  "eval_harm": 159,
+  "strongreject_eval": 53,
+  "xstest_safe": 250,
+  "orbench_eval": 60,
+  "alpaca_train": 1980,
+  "scary_train": 1269
+ }
+}

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# the full run folders contain jailbreak prompts and harmful completions: keep them private
+logs/
+cache/
+attacks/
+ckpt/merged*/

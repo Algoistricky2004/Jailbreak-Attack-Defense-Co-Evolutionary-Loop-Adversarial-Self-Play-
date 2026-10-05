@@ -1,0 +1,21 @@
+{
+ "calls": 6293,
+ "cached": 1775,
+ "failed": 0,
+ "parse_failures": 0,
+ "in_tokens": 2797013,
+ "out_tokens": 502886,
+ "by_purpose": {
+  "judge_harmbench": {
+   "calls": 6293,
+   "in_tokens": 2797013,
+   "out_tokens": 502886
+  }
+ },
+ "cost_usd": 1.705,
+ "price_per_m": {
+  "inp": 0.25,
+  "out": 2.0
+ },
+ "updated": "2026-10-04T23:35:47"
+}

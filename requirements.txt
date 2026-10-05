@@ -1,0 +1,13 @@
+# pinned as in the runs (see results/core/pip_freeze.txt for the full freeze). nanogcg needs transformers 4.47.1.
+transformers==4.47.1
+peft==0.14.0
+accelerate==1.2.1
+nanogcg>=0.3.0
+datasets
+sentencepiece
+scikit-learn
+pandas
+matplotlib
+requests
+tqdm
+huggingface_hub

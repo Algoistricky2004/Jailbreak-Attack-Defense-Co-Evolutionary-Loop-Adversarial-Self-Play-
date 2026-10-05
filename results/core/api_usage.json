@@ -1,0 +1,26 @@
+{
+ "calls": 3883,
+ "cached": 4159,
+ "failed": 0,
+ "parse_failures": 0,
+ "in_tokens": 1494740,
+ "out_tokens": 273228,
+ "by_purpose": {
+  "judge_harmbench": {
+   "calls": 3373,
+   "in_tokens": 1415710,
+   "out_tokens": 235914
+  },
+  "autodan_mutation": {
+   "calls": 510,
+   "in_tokens": 79030,
+   "out_tokens": 37314
+  }
+ },
+ "cost_usd": 0.9201,
+ "price_per_m": {
+  "inp": 0.25,
+  "out": 2.0
+ },
+ "updated": "2026-10-04T17:05:38"
+}

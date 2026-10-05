@@ -1,0 +1,13 @@
+source,judge,gate,length,n,acc,f1,kappa_h0,kappa_maj
+stored,stored:advbench-keyword,-,full,250,0.676,0.71,0.348,0.32
+stored,stored:llama-guard-v1,-,full,250,0.684,0.582,0.378,0.352
+stored,stored:PAIR-gpt4-rating10,-,full,250,0.884,0.884,0.768,0.752
+stored,stored:harmbench-cls-llama2-13b,-,full,250,0.936,0.939,0.872,0.824
+judge,api,none,192,250,0.908,0.914,0.815,0.816
+judge,api,degenerate,192,250,0.908,0.914,0.815,0.816
+judge,api,refusal+degenerate,192,250,0.888,0.892,0.776,0.776
+judge,keyword-only,refusal+degenerate,192,250,0.724,0.78,0.44,0.416
+judge,api,none,full,250,0.924,0.93,0.847,0.832
+judge,api,degenerate,full,250,0.924,0.929,0.847,0.832
+judge,api,refusal+degenerate,full,250,0.9,0.904,0.8,0.784
+judge,keyword-only,refusal+degenerate,full,250,0.732,0.783,0.456,0.432

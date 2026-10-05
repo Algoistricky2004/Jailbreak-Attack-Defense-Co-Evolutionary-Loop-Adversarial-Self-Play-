@@ -1,0 +1,74 @@
+{
+ "direct_ort": {
+  "pool_size": 634,
+  "distinct_prompts_visited": 88,
+  "total_visits": 92,
+  "mean_visits_per_visited_prompt": 1.05,
+  "max_visits": 2,
+  "effective_epochs_over_pool": 0.145
+ },
+ "succ": {
+  "pool_size": 201,
+  "distinct_prompts_visited": 84,
+  "total_visits": 109,
+  "mean_visits_per_visited_prompt": 1.3,
+  "max_visits": 3,
+  "effective_epochs_over_pool": 0.542
+ },
+ "alpaca": {
+  "pool_size": 1980,
+  "distinct_prompts_visited": 68,
+  "total_visits": 71,
+  "mean_visits_per_visited_prompt": 1.04,
+  "max_visits": 2,
+  "effective_epochs_over_pool": 0.036
+ },
+ "gsm": {
+  "pool_size": 400,
+  "distinct_prompts_visited": 16,
+  "total_visits": 16,
+  "mean_visits_per_visited_prompt": 1.0,
+  "max_visits": 1,
+  "effective_epochs_over_pool": 0.04
+ },
+ "scary": {
+  "pool_size": 1239,
+  "distinct_prompts_visited": 16,
+  "total_visits": 17,
+  "mean_visits_per_visited_prompt": 1.06,
+  "max_visits": 2,
+  "effective_epochs_over_pool": 0.014
+ },
+ "wrap": {
+  "pool_size": 300,
+  "distinct_prompts_visited": 15,
+  "total_visits": 15,
+  "mean_visits_per_visited_prompt": 1.0,
+  "max_visits": 1,
+  "effective_epochs_over_pool": 0.05
+ },
+ "direct_hb": {
+  "pool_size": 19,
+  "distinct_prompts_visited": 14,
+  "total_visits": 33,
+  "mean_visits_per_visited_prompt": 2.36,
+  "max_visits": 4,
+  "effective_epochs_over_pool": 1.737
+ },
+ "direct_adv": {
+  "pool_size": 453,
+  "distinct_prompts_visited": 30,
+  "total_visits": 31,
+  "mean_visits_per_visited_prompt": 1.03,
+  "max_visits": 2,
+  "effective_epochs_over_pool": 0.068
+ },
+ "authored": {
+  "pool_size": 30,
+  "distinct_prompts_visited": 13,
+  "total_visits": 16,
+  "mean_visits_per_visited_prompt": 1.23,
+  "max_visits": 2,
+  "effective_epochs_over_pool": 0.533
+ }
+}
