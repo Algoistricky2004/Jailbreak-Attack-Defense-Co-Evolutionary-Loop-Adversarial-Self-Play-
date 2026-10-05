@@ -7,7 +7,7 @@ There are two parts, as asked in the assignment:
 - **Main part (no bonus):** the attackers are fixed, I do not train them. I use two search-based attacks, GCG and AutoDAN, and run them fresh on the current defender weights in every round.
 - **Bonus part:** the attacker is also a small model and it is trained with RL against the defender.
 
-Everything was run in Google Colab notebooks on an L4 GPU. The main loop is in `notebooks/track2_coevolution_grpo_Final.ipynb`. The bonus was run as one cell of the same notebook (cell 90, saved as `scripts/bonus_corrected.py`), and the notebook has the outputs of that run. Judge is OpenAI `gpt-5-mini`. All numbers below are from my run folders, and the files behind them are in `results/`.
+Everything was run in Google Colab notebooks on an L4 GPU. The main loop is in `notebooks/track2_coevolution_grpo_Final.ipynb`. The bonus is the standalone script `scripts/run_bonus_coevolution.py` (the same code is also in cell 90 of the notebook, and the notebook has the outputs of the run). Judge is OpenAI `gpt-5-mini`. All numbers below are from my run folders, and the files behind them are in `results/`.
 
 Some short terms: **ASR** is attack success rate, meaning how many attacks the judge marked as successful. **D0** is the original model, **D1** is the defender after round 1 of training, and so on.
 
@@ -180,7 +180,7 @@ Reasons, from most to least important:
 
 I also replayed both versions of `select_snapshot` (taken from the repo scripts) on the logged probe numbers of every round (`tests/smoke_test.py`). The original function gives exactly the decision that was logged in all 8 rounds (core rounds 1 to 5, bonus rounds 1 to 3). The corrected one would accept core round 2 (step 10) and core round 5 (step 30), and still rejects core rounds 3 and 4 and all three bonus rounds.
 
-The corrected check (adds `1e-9`) is in `scripts/bonus_corrected.py` (FIX 4), and also as a comment next to the original `select_snapshot` in `scripts/core_pipeline.py`. I did not re-run the main rounds with it because compute was over. By counting from the logged probe values, the two round-2 snapshots and the round-5 one would have passed with this fix. This is only counting, not a result from a run.
+The corrected check (adds `1e-9`) is in `scripts/run_bonus_coevolution.py` (FIX 4), and also as a comment next to the original `select_snapshot` in `scripts/core_pipeline.py`. I did not re-run the main rounds with it because compute was over. By counting from the logged probe values, the two round-2 snapshots and the round-5 one would have passed with this fix. This is only counting, not a result from a run.
 
 **My hypothesis (not tested).** The attackers' loss on D1 is clearly higher than on D0. So round 1 really changed the model, and I think the later rounds did not fail because there was nothing to learn, but because my check did not allow the updates. The loss numbers from the logs:
 
@@ -189,6 +189,30 @@ The corrected check (adds `1e-9`) is in `scripts/bonus_corrected.py` (FIX 4), an
 - GCG median final loss 0.363 then 0.474, 0.624, 0.556. AutoDAN went from success in step 1 to no success in 40 steps.
 
 My guess is that with the check fixed and a bigger dev probe, more rounds would be accepted and these losses would keep going up, while benign compliance would keep going down (`figures/fig4_dev_probe_safety_vs_utility.png` shows that every snapshot that refuses more also complies less). I could not run this, so please treat it only as a hypothesis.
+
+### 2.9 How the RL in the bonus is different from the RL in the main part
+
+I compared the code of the main part (notebook cells 2 to 61, stages 0 to 7) with the bonus script, function by function (after removing comments and spacing). The result is below.
+
+**Same code in both:** the defender RL is exactly the same. 124 functions are identical, and this includes `train_defender`, `grpo_backward`, `compute_rewards`, `reward_one`, `gsm_reward`, `build_rl_pools`, `sample_rl_batch`, `dev_probe`, `rescue_refusals` and `rl_sample`. The settings are also the same: 40 steps max, 10 prompts x 6 samples, lr 8e-5, beta 0.04, eps 0.2, one update per rollout, KL stop 0.3, benign share 0.30, dev probe every 10 steps, same benign weights and same group weights.
+
+**Different:**
+
+| | Main part | Bonus |
+|---|---|---|
+| Who attacks | GCG and AutoDAN (fixed, not trained), run again on the current weights each round | a Qwen2.5-1.5B attacker with its own LoRA, trained with GRPO (`train_attacker`, new code) |
+| Where the defender's attack data comes from | judged successes of GCG, AutoDAN and the template sweep | only the judged successes of the RL attacker (template sweep is off, `sweep=False`) |
+| Success pool for defender RL | 166 prompts in round 1, 169 in round 2 | 51, 117 and 201 prompts in rounds 1, 2, 3 |
+| Weights of the harmful-side pools | succ 0.30, wrapped 0.20, OR-Bench-toxic 0.25, failed 0.05, HarmBench-val 0.10, AdvBench 0.10 | succ 0.40, wrapped 0.05, OR-Bench-toxic 0.30, failed 0.05, HarmBench-val 0.10, AdvBench 0.10 |
+| Guard function `select_snapshot` | original (float rounding at the edge) | with `1e-9` added (FIX 4). This is the only defender-side function that is different. |
+| Starting defender | D0, 3 training rounds + 1 final attack round | D0 (`rounds=0`), 3 bonus rounds, no final attack round |
+| Reward for the attacker | not applicable | -0.5 invalid, +1.0 judged jailbroken (+0.6 if it is almost a copy of the seed), +0.25 for a real non-refusal that the judge looked at, else 0 |
+| How "success" and "refusal" are decided | defender reward: refusal regex, and the API judge only for harmful-side replies that are not short refusals | attacker reward: the API judge decides success; the partial credit goes only to replies the judge saw and that are not hard or soft refusals (wider soft-refusal regex, FIX 1 and 5) |
+| Reference policy for the KL term | the defender before the round (adapter off) | for the attacker: the untrained attacker (adapter off). For the bonus defender: same as the main part. |
+| Attacker settings | not applicable | lr 3e-5 (FIX 3; the first try had 5e-5), 8 behaviours x 8 samples per step, 30 steps per round, KL stop on the median of the last 5 steps above 0.5 (FIX 2), harvest 32 behaviours x 4 prompts |
+| Attacker test | not applicable | 176 prompts: 24 AdvBench x 4 + 40 HarmBench-test x 2 (the first try used 112) |
+
+So the bonus defender is trained with the same RL code, but on different data (attacker's successes only) and with the fixed guard. What is really new in the bonus is the attacker RL. One more point: my first bonus attempt (notebook stage 9, against D3) used the old settings (attacker lr 5e-5, 6 samples, harvest 16 behaviours, sweep on, old guard). The 5 fixes and the new settings are in `scripts/run_bonus_coevolution.py`, and the results in `results/bonus/` are from this script.
 
 ---
 
@@ -211,7 +235,7 @@ My guess is that with the check fixed and a bigger dev probe, more rounds would 
 
 Samples for the attacker: it trains on 419 behaviours (200 from AdvBench, 19 from HarmBench-val, 200 from OR-Bench-toxic). In one step it takes 8 of them, makes 8 prompts for each, so one round of 30 steps generates 1,920 attack prompts. After the round it collects 32 behaviours x 4 = 128 prompts as training material for the defender. The attacker is tested on a fixed set with fixed seeds: 24 reserved AdvBench behaviours and 40 HarmBench-test behaviours, 176 samples per row, 95% Wilson intervals. It never sees the unseen attack types.
 
-**How I started it.** `scripts/bonus_corrected.py` copies the judge cache, judge check and D0 evaluation from the main run folder (nothing in that folder is changed). It first tests the untrained attacker on D0 as a control (A0), then runs the 3 rounds. Each round does this: train attacker against the frozen defender, test the attacker, collect its successful prompts, train the defender on them together with the usual safe and helpful data (with the dev probe), test the defender, and test the attacker on the updated defender. It can resume if stopped.
+**How I started it.** `scripts/run_bonus_coevolution.py` copies the judge cache, judge check and D0 evaluation from the main run folder (nothing in that folder is changed). It first tests the untrained attacker on D0 as a control (A0), then runs the 3 rounds. Each round does this: train attacker against the frozen defender, test the attacker, collect its successful prompts, train the defender on them together with the usual safe and helpful data (with the dev probe), test the defender, and test the attacker on the updated defender. It can resume if stopped.
 
 **Results** (`results/bonus/`, `figures/fig3_bonus_attacker.png`):
 
@@ -290,8 +314,7 @@ pip install -r requirements.txt     # Colab, GPU runtime, L4 recommended
 
 1. **Main part:** open `notebooks/track2_coevolution_grpo_Final.ipynb` and run the stages in order (`scripts/core_pipeline.py` has the same cells). Only the CONFIG cell (cell 5) needs editing: `API_KEY` (or Colab secret `OPENAI_API_KEY`) and the Drive folder `WORK`. Preset is `final_v3`. Every stage can resume.
 2. **Analysis and export:** `scripts/analysis_export.py` (notebook cells 78 to 89: plots, diversity, hand-audit export, release export, run report). It uses names from the main part, so run it in the same session after the main part.
-3. **Bonus (corrected):** I ran `scripts/bonus_corrected.py` as one cell of the notebook (cell 90), and the saved notebook has its outputs. Set `CORE_RUN_FOLDER` to the main run folder (its judge cache and D0 evaluation are reused). `START_FROM = 0` starts from the original defender, `BONUS_ROUNDS = 3`. It has FIX 1 to 5 (soft-refusal filter, median-of-5 KL stop, lr 3e-5, the rounding fix, partial credit only for replies the judge actually saw).
-   One thing to note: when I check the code with pyflakes, the script has exactly two undefined names, `API_KEY` and `HF_TOKEN_INLINE` (line 165 and 166). Only the notebook's CONFIG cell (cell 5) defines them, and `API_KEY_INPUT` at the top of the script is never copied into `API_KEY`. So if you run the cell alone in a fresh runtime, define `API_KEY = ""` and `HF_TOKEN_INLINE = ""` above it and keep the key as Colab secret `OPENAI_API_KEY` (this workaround is not tested). I left the code as it is.
+3. **Bonus (corrected):** use `scripts/run_bonus_coevolution.py`. It is a standalone script for one Colab cell (GPU runtime). It is the same as cell 90 of the notebook, except that it has two extra lines after the header, `API_KEY = API_KEY_INPUT` and `HF_TOKEN_INLINE = ""`. Without these two lines, cell 90 uses `API_KEY` and `HF_TOKEN_INLINE`, which only the notebook's CONFIG cell defines. So inside the notebook session cell 90 is fine, and alone in a fresh runtime you need this script. Pyflakes finds no undefined names in the script. Put the OpenAI key in `API_KEY_INPUT` (or as Colab secret `OPENAI_API_KEY`), and set `CORE_RUN_FOLDER` to the main run folder (its judge cache and D0 evaluation are reused). `START_FROM = 0` starts from the original defender, `BONUS_ROUNDS = 3`. It has FIX 1 to 5 (soft-refusal filter, median-of-5 KL stop, lr 3e-5, the rounding fix, partial credit only for replies the judge actually saw).
 4. **Figures:** `python scripts/make_figures.py` (reads `results/`, writes `figures/`).
 5. **Smoke test (CPU, no GPU, no network, no key):** `python tests/smoke_test.py`. It needs torch, transformers 4.47.1, peft 0.14.0, numpy, pandas. It takes the real functions from the scripts and runs 28 checks on a tiny random model: the helpers and rewards, the guard on all logged probes, the GRPO gradient against an independent formula, `train_defender` (accepted path, and a forced-reject path that leaves the weights bit-for-bit equal to the base), and `train_attacker`. All 28 pass on my side.
 
@@ -304,7 +327,7 @@ README.md
 requirements.txt
 notebooks/track2_coevolution_grpo_Final.ipynb   whole pipeline, stage by stage, with outputs of the runs
 scripts/core_pipeline.py        exact notebook code (cells 2 to 61), corrected check as a comment near select_snapshot
-scripts/bonus_corrected.py      exact notebook cell 90, the bonus script with FIX 1 to 5 comments
+scripts/run_bonus_coevolution.py      the standalone bonus script (my file, same as notebook cell 90 plus two lines for API_KEY and HF_TOKEN_INLINE)
 scripts/analysis_export.py      exact notebook cells 78 to 89
 scripts/make_figures.py         makes figures/ from results/
 tests/smoke_test.py             CPU smoke test of the real script functions (28 checks)

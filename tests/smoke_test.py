@@ -1,7 +1,7 @@
 """
 CPU smoke test for the repo scripts. No GPU, no network, no API key.
 
-It takes the real function definitions out of scripts/core_pipeline.py and scripts/bonus_corrected.py (by AST, not retyped), puts them
+It takes the real function definitions out of scripts/core_pipeline.py and scripts/run_bonus_coevolution.py (by AST, not retyped), puts them
 in a namespace together with a tiny random Qwen2 model and a tiny tokenizer, and runs them:
   1. pure helpers (refusal regex, judge reply parsers, GSM8K extractor, Wilson interval, rewards, attacker validation/reward)
   2. both select_snapshot versions (original and epsilon fix) on the dev-probe numbers of every logged round
@@ -21,7 +21,7 @@ from peft import LoraConfig, get_peft_model
 from tokenizers import Tokenizer, models, trainers, pre_tokenizers, decoders
 
 ROOT = Path(__file__).resolve().parents[1]
-CORE, BONUS = (ROOT / "scripts/core_pipeline.py").read_text(), (ROOT / "scripts/bonus_corrected.py").read_text()
+CORE, BONUS = (ROOT / "scripts/core_pipeline.py").read_text(), (ROOT / "scripts/run_bonus_coevolution.py").read_text()
 RESULTS = ROOT / "results"
 PASS = []
 def check(name, ok, note=""):
