@@ -7,7 +7,7 @@ There are two parts, as asked in the assignment:
 - **Main part (no bonus):** the attackers are fixed, I do not train them. I use two search-based attacks, GCG and AutoDAN, and run them fresh on the current defender weights in every round.
 - **Bonus part:** the attacker is also a small model and it is trained with RL against the defender.
 
-Everything was run in Google Colab notebooks on an L4 GPU. The main loop is in `notebooks/track2_coevolution_grpo_Final.ipynb`. The bonus is the standalone script `scripts/run_bonus_coevolution.py` (the same code is also in cell 90 of the notebook, and the notebook has the outputs of the run). Judge is OpenAI `gpt-5-mini`. All numbers below are from my run folders, and the files behind them are in `results/`.
+Everything was run in Google Colab on an L4 GPU, inside one notebook: `notebooks/track2_coevolution_grpo_Final.ipynb`. The main part is the stages in the middle of the notebook. The bonus script is the last (bottom) cell, cell 90, and the notebook has the outputs of both. The same bonus code is also saved as `scripts/run_bonus_coevolution.py`. Judge is OpenAI `gpt-5-mini`. All numbers below are from my run folders, and the files behind them are in `results/`.
 
 Some short terms: **ASR** is attack success rate, meaning how many attacks the judge marked as successful. **D0** is the original model, **D1** is the defender after round 1 of training, and so on.
 
@@ -24,6 +24,8 @@ Some short terms: **ASR** is attack success rate, meaning how many attacks the j
 ---
 
 ## 1. Setup and budget
+
+**Order in which I ran things.** First I ran the main part (fixed attackers, RL on the defender). There the RL stopped helping after round 1 because my dev probe rejected the later updates, so the later defenders gave identical outputs (section 2.8). Then I ran the bonus (RL attacker). For the bonus I changed a few things, listed as FIX 1 to 5 in the script and in section 2.9, and I ran it as a separate script, which is the last cell of the notebook, starting again from the original model D0.
 
 | | |
 |---|---|
@@ -51,7 +53,7 @@ My settings: population 32, starting from the first 32 templates of the released
 
 Where I differ from the papers: success is decided by the API judge and not by AutoDAN's keyword list. The released AutoDAN pool starts from a "hypothetical response" template, while the paper talks about a DAN template, and I use the released pool. Elite rate 0.1 and the 5-then-1 schedule follow the paper and not the code defaults. Budget and seeds are the same in every round so the ASR numbers can be compared.
 
-I also wrote code for [PAIR](https://arxiv.org/abs/2310.08419) and [PAP](https://arxiv.org/abs/2401.06373), but kept them switched off because OpenAI chat models cost was becoming bottleneck
+I also wrote code for [PAIR](https://arxiv.org/abs/2310.08419) and [PAP](https://arxiv.org/abs/2401.06373), but kept them switched off because OpenAI chat models refuse to play the red-teamer. Same for ROT13, base64 and disemvowel attacks from [Wei et al.](https://arxiv.org/abs/2307.02483): a 1.5B model cannot decode them, so the numbers would be near zero anyway.
 
 ### 2.2 The judge
 
@@ -314,7 +316,7 @@ pip install -r requirements.txt     # Colab, GPU runtime, L4 recommended
 
 1. **Main part:** open `notebooks/track2_coevolution_grpo_Final.ipynb` and run the stages in order (`scripts/core_pipeline.py` has the same cells). Only the CONFIG cell (cell 5) needs editing: `API_KEY` (or Colab secret `OPENAI_API_KEY`) and the Drive folder `WORK`. Preset is `final_v3`. Every stage can resume.
 2. **Analysis and export:** `scripts/analysis_export.py` (notebook cells 78 to 89: plots, diversity, hand-audit export, release export, run report). It uses names from the main part, so run it in the same session after the main part.
-3. **Bonus (corrected):** use `scripts/run_bonus_coevolution.py`. It is a standalone script for one Colab cell (GPU runtime). It is the same as cell 90 of the notebook, except that it has two extra lines after the header, `API_KEY = API_KEY_INPUT` and `HF_TOKEN_INLINE = ""`. Without these two lines, cell 90 uses `API_KEY` and `HF_TOKEN_INLINE`, which only the notebook's CONFIG cell defines. So inside the notebook session cell 90 is fine, and alone in a fresh runtime you need this script. Pyflakes finds no undefined names in the script. Put the OpenAI key in `API_KEY_INPUT` (or as Colab secret `OPENAI_API_KEY`), and set `CORE_RUN_FOLDER` to the main run folder (its judge cache and D0 evaluation are reused). `START_FROM = 0` starts from the original defender, `BONUS_ROUNDS = 3`. It has FIX 1 to 5 (soft-refusal filter, median-of-5 KL stop, lr 3e-5, the rounding fix, partial credit only for replies the judge actually saw).
+3. **Bonus:** run the last cell of the notebook (cell 90), or the same code from `scripts/run_bonus_coevolution.py`. The standalone file only adds two lines after the header, `API_KEY = API_KEY_INPUT` and `HF_TOKEN_INLINE = ""`, because the code below uses these two names and the cell alone does not define them. Put the OpenAI key in `API_KEY_INPUT` (or as Colab secret `OPENAI_API_KEY`) and set `CORE_RUN_FOLDER` to the main run folder (its judge cache and D0 evaluation are reused). `START_FROM = 0` starts from the original defender and `BONUS_ROUNDS = 3`. It has FIX 1 to 5 (soft-refusal filter, median-of-5 KL stop, lr 3e-5, the rounding fix, partial credit only for replies the judge actually saw).
 4. **Figures:** `python scripts/make_figures.py` (reads `results/`, writes `figures/`).
 5. **Smoke test (CPU, no GPU, no network, no key):** `python tests/smoke_test.py`. It needs torch, transformers 4.47.1, peft 0.14.0, numpy, pandas. It takes the real functions from the scripts and runs 28 checks on a tiny random model: the helpers and rewards, the guard on all logged probes, the GRPO gradient against an independent formula, `train_defender` (accepted path, and a forced-reject path that leaves the weights bit-for-bit equal to the base), and `train_attacker`. All 28 pass on my side.
 
@@ -327,7 +329,7 @@ README.md
 requirements.txt
 notebooks/track2_coevolution_grpo_Final.ipynb   whole pipeline, stage by stage, with outputs of the runs
 scripts/core_pipeline.py        exact notebook code (cells 2 to 61), corrected check as a comment near select_snapshot
-scripts/run_bonus_coevolution.py      the standalone bonus script (my file, same as notebook cell 90 plus two lines for API_KEY and HF_TOKEN_INLINE)
+scripts/run_bonus_coevolution.py      the bonus script, same code as the last cell (cell 90) of the notebook plus two lines for API_KEY and HF_TOKEN_INLINE
 scripts/analysis_export.py      exact notebook cells 78 to 89
 scripts/make_figures.py         makes figures/ from results/
 tests/smoke_test.py             CPU smoke test of the real script functions (28 checks)
